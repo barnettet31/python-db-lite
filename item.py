@@ -1,10 +1,13 @@
+from db import Database
+
+
 class InventoryItem:
     """Class for all inventory items"""
 
     def __init__(self, name, amount, price):
         self.name = name
-        self.amount = amount
-        self.price = price
+        self.amount = int(amount)
+        self.price = int(price)
 
     @property
     def listing(self):
@@ -16,3 +19,67 @@ class InventoryItem:
             'amount': self.amount,
             'price': self.price
         }
+
+
+class Inventory:
+    """"Class To Manage Inventory System"""
+
+    def __init__(self):
+        self.database = Database()
+
+    def add_item_to_inventory(self):
+        item_name = input(
+            'What is the name of the item you are trying to add to the inventory?')
+        item_amount = input(
+            'How many of this item are you adding to the inventory?')
+        item_price = input('What is the price per kg of this item?')
+        item = InventoryItem(item_name, item_amount, item_price)
+        item_exists = self.database.read_one_inventory(item.name)
+        if item_exists is None:
+            print('Creating new item')
+            self.database.create_inventory_item(item)
+        else:
+            print('Item already exists')
+            print('Adding to existing item')
+            self.database.update_item(item.name, 'amount', item.amount)
+            self.database.update_item(item.name, 'price', item.price)
+            print('Item updated')
+            print('Item now looks like this')
+            self.database.read_one_inventory(item.name)
+
+    def add_multiple_items_to_inventory(self):
+        items = []
+        item_amount = input('How many items are you adding to the inventory?')
+        for item in range(int(item_amount)):
+            item_name = input(
+                'What is the name of the item you are trying to add to the inventory?')
+            item_amount = input(
+                'How many of this item are you adding to the inventory?')
+            item_price = input('What is the price per kg of this item?')
+            items.append(InventoryItem(item_name, item_amount, item_price))
+        self.database.create_many_items(items)
+
+    def update_item_in_inventory(self):
+        item_name = input(
+            'What is the name of the item you are trying to update?')
+        item_amount = input(
+            'How many of this item are you adding to the inventory?')
+        item_price = input('What is the price per kg of this item?')
+        item = InventoryItem(item_name, item_amount, item_price)
+        self.database.update_item(item.name, 'amount', item.amount)
+        self.database.update_item(item.name, 'price', item.price)
+
+    def delete_item_from_inventory(self):
+        item_name = input(
+            'What is the name of the item you are trying to delete?')
+        self.database.delete_inventory_item(item_name)
+
+    def read_all_inventory(self):
+        self.database.read_all_inventory()
+
+    def read_one_inventory(self):
+        item_name = input(
+            'What is the name of the item you are trying to read?')
+        item = self.database.read_one_inventory(item_name)
+        if item is None:
+            print('Item does not exist')
