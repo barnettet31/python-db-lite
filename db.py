@@ -38,7 +38,10 @@ reading inventory, updating inventory,
                 '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nItem already exists\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
             print(
                 '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nAdding to existing item\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
-            self.update_inventory_item(item)
+            self.update_item(item_name=item.name,
+                             target='amount', value=item.amount)
+            self.update_item(item_name=item.name,
+                             target='price', value=item.price)
             print(
                 '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nItem updated\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
             print(
@@ -100,16 +103,16 @@ reading inventory, updating inventory,
         if it doesn't exist then it return None
         and if it does exist then it will update the passed key with the passed value """
         with self.conn:
-            self.c.execute("SELECT * FROM items WHERE :name",
-                           {'name': item_name})
+            self.c.execute(
+                "SELECT * FROM items WHERE name = :name", {'name': item_name})
             item = self.c.fetchone()
             if item is None:
                 print(
-                    '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Item does not exist\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+                    '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Item does not exist when updating\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
                 return None
             else:
-                self.c.execute("UPDATE items SET :target = :target +  :value WHERE :name", {
-                    'target': target, 'value': value, 'name': item_name})
+                query = f"UPDATE items SET {target} = {target} + :value WHERE name = :name"
+                self.c.execute(query, {'name': item_name, 'value': value})
                 print(
                     '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Item updated\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
                 print(
@@ -121,12 +124,14 @@ reading inventory, updating inventory,
         it exists or send an alert of I cannot delete what does not exist"""
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Delete {}\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'.format(key))
         with self.conn:
-            self.c.execute("DELETE FROM items WHERE :name", {'name': key})
+            self.c.execute(
+                "SELECT * FROM items WHERE name = :name", {'name': key})
             item = self.c.fetchone()
             if item is None:
                 print(
                     '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Item does not exist\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
             else:
-                self.c.execute("DELETE FROM items WHERE :name", {'name': key})
+                self.c.execute(
+                    "DELETE FROM items WHERE name = :name", {'name': key})
                 print(
                     '~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Item deleted\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
